@@ -40,6 +40,11 @@ jobs:
           set -e
           [[ "$ID" =~ ^[a-f0-9]{10}$ ]] || { echo "Geçersiz id"; exit 1; }
           cp "jobs/$ID/index.html" android/app/src/main/assets/index.html
+          if [ -f "jobs/$ID/icon.png" ]; then
+            mkdir -p android/app/src/main/res/drawable
+            cp "jobs/$ID/icon.png" android/app/src/main/res/drawable/ic_launcher.png
+            sed -i 's|<application|<application android:icon="@drawable/ic_launcher"|' android/app/src/main/AndroidManifest.xml
+          fi
           python3 - <<'PY'
           import os, re
           ad = re.sub(r'[^0-9A-Za-zÇĞİÖŞÜçğıöşü _.\-]', '', os.environ.get('AD', ''))[:30].strip() or 'Uygulamam'
