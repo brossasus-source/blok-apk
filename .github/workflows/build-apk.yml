@@ -49,6 +49,13 @@ jobs:
           case "$YON" in
             portrait|landscape) sed -i "s|android:name=\".MainActivity\"|android:name=\".MainActivity\" android:screenOrientation=\"$YON\"|" android/app/src/main/AndroidManifest.xml ;;
           esac
+          if [ -d "jobs/$ID/img" ]; then
+            mkdir -p android/app/src/main/assets/img
+            cp jobs/$ID/img/* android/app/src/main/assets/img/
+          fi
+          if grep -q 'name="ugco-internet"' "jobs/$ID/index.html"; then
+            sed -i 's|<uses-permission android:name="android.permission.VIBRATE" />|&\n    <uses-permission android:name="android.permission.INTERNET" />|' android/app/src/main/AndroidManifest.xml
+          fi
           python3 - <<'PY'
           import os, re
           ad = re.sub(r'[^0-9A-Za-zÇĞİÖŞÜçğıöşü _.\-]', '', os.environ.get('AD', ''))[:30].strip() or 'Uygulamam'
