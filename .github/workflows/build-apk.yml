@@ -55,6 +55,7 @@ jobs:
           fi
           if grep -q 'name="ugco-internet"' "jobs/$ID/index.html"; then
             sed -i 's|<uses-permission android:name="android.permission.VIBRATE" />|&\n    <uses-permission android:name="android.permission.INTERNET" />|' android/app/src/main/AndroidManifest.xml
+            sed -i 's|<application|<application android:usesCleartextTraffic="true"|' android/app/src/main/AndroidManifest.xml
           fi
           python3 - <<'PY'
           import os, re
