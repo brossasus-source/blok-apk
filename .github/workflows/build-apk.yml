@@ -45,6 +45,10 @@ jobs:
             cp "jobs/$ID/icon.png" android/app/src/main/res/drawable/ic_launcher.png
             sed -i 's|<application|<application android:icon="@drawable/ic_launcher"|' android/app/src/main/AndroidManifest.xml
           fi
+          YON=$(grep -o 'name="ugco-yon" content="[a-z]*"' "jobs/$ID/index.html" | sed 's/.*content="//;s/"//')
+          case "$YON" in
+            portrait|landscape) sed -i "s|android:name=\".MainActivity\"|android:name=\".MainActivity\" android:screenOrientation=\"$YON\"|" android/app/src/main/AndroidManifest.xml ;;
+          esac
           python3 - <<'PY'
           import os, re
           ad = re.sub(r'[^0-9A-Za-zÇĞİÖŞÜçğıöşü _.\-]', '', os.environ.get('AD', ''))[:30].strip() or 'Uygulamam'
