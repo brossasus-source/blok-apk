@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Deneme Uygulaması</title><style>html,body{height:100%;margin:0}body{font-family:sans-serif;background:#eef6ff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;text-align:center;padding:20px}h1{font-size:22px;margin:0;color:#1d2b36}#yazi{font-size:34px;font-weight:700;color:#1d2b36;min-height:44px}#buton{font-size:22px;padding:18px 34px;border:0;border-radius:16px;background:#1f9d55;color:#fff;font-weight:700}#buton:active{transform:scale(.97)}#tost{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#333;color:#fff;padding:10px 16px;border-radius:20px;font-size:15px;display:none}</style></head><body><h1>Deneme Uygulaması</h1><div id="yazi">Merhaba!</div><button id="buton">Bana dokun</button><div id="tost"></div><script>
+window.Android = window.Android || { toast:function(m){var t=document.getElementById("tost");t.textContent=m;t.style.display="block";clearTimeout(t._z);t._z=setTimeout(function(){t.style.display="none"},2000)}, vibrate:function(ms){if(navigator.vibrate)navigator.vibrate(ms)}, speak:function(s){try{var u=new SpeechSynthesisUtterance(s);u.lang="tr-TR";speechSynthesis.speak(u)}catch(e){}}};
+function mathRandomInt(a, b) {
+  if (a > b) {
+    // Swap a and b to ensure a is smaller.
+    var c = a;
+    a = b;
+    b = c;
+  }
+  return Math.floor(Math.random() * (b - a + 1) + a);
+}
+
+
+document.getElementById('buton').addEventListener('click', function () {
+  document.getElementById('yazi').textContent = String('Sayı: ' + String(mathRandomInt(1, 100)));
+  Android.vibrate(200);
+  Android.toast(String('Dokundun!'));
+});
+
+</script></body></html>
