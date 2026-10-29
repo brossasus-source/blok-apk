@@ -51,7 +51,7 @@ jobs:
           esac
           if [ -d "jobs/$ID/img" ]; then
             mkdir -p android/app/src/main/assets/img
-            cp jobs/$ID/img/* android/app/src/main/assets/img/
+            cp -r jobs/$ID/img/. android/app/src/main/assets/img/
           fi
           if grep -q 'name="ugco-internet"' "jobs/$ID/index.html"; then
             sed -i 's|<uses-permission android:name="android.permission.VIBRATE" />|&\n    <uses-permission android:name="android.permission.INTERNET" />|' android/app/src/main/AndroidManifest.xml
