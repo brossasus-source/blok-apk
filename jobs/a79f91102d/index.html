@@ -1,0 +1,28 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><meta name="ugco-yon" content="portrait"><meta name="ugco-paket" content="com.ugco.uygulamam"><meta name="ugco-surum" content="4"><title>test</title><style>html,body{margin:0;height:100%;overflow:hidden}#e{position:fixed;inset:0;background:#eef6ff}.b{position:absolute;box-sizing:border-box;margin:0;font-family:sans-serif}.l{display:flex;align-items:center;padding:0 2%}.t{border:1px solid #9aa8b5;border-radius:6px;padding:0 2%}.k{border:0;border-radius:10px;font-weight:700}.w{border:0;background:#fff}.f{display:flex;align-items:center;overflow:hidden}.c{position:relative;box-sizing:border-box;margin:0;font-family:sans-serif}#__t{position:fixed;left:50%;bottom:4%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 16px;border-radius:20px;display:none;font:15px sans-serif}</style></head><body><div id="e"><button id="btn1" class="b k" style="left:28.888888888888886%;top:87.65625%;width:44.44444444444444%;height:7.8125%;font-size:5.555555555555555vw;color:#ffffff;background:#27ae60">&gt;</button><button id="btn2" class="b k" style="left:28.888888888888886%;top:3.125%;width:44.44444444444444%;height:7.8125%;font-size:5.555555555555555vw;color:#ffffff;background:#27ae60">&lt;</button><img id="img1" class="b i" style="left:0%;top:14.0625%;width:100%;height:70%;font-size:4.444444444444445vw;color:#1d2b36;background:transparent;object-fit:contain"></div><div id="__t"></div><script>
+window.Android=window.Android||{toast:function(m){var t=document.getElementById("__t");t.textContent=m;t.style.display="block";clearTimeout(t.z);t.z=setTimeout(function(){t.style.display="none"},2000)},vibrate:function(m){if(navigator.vibrate)navigator.vibrate(m)},speak:function(s){try{var u=new SpeechSynthesisUtterance(s);u.lang="tr-TR";speechSynthesis.speak(u)}catch(e){}}};var UGCO={yaz:function(i,s){var e=document.getElementById(i);if(e.tagName=="INPUT")e.value=s;else e.textContent=s},oku:function(i){var e=document.getElementById(i);return e.tagName=="INPUT"?e.value:e.textContent},gor:function(i,b){var e=document.getElementById(i);e.style.display=b?"":"none";if(e.hasAttribute("data-web")&&Android.webGor)Android.webGor(i,b)},bg:function(i,c){document.getElementById(i).style.background=c},Z:[],zaman:function(s,f){UGCO.Z.push(setInterval(f,Math.max(0.05,s)*1000))},sonra:function(s,f){UGCO.Z.push(setTimeout(f,Math.max(0,s)*1000))},durdur:function(){UGCO.Z.forEach(function(t){clearInterval(t);clearTimeout(t)});UGCO.Z=[]},ekranBg:function(c){document.getElementById("e").style.background=c},karistir:function(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}},git:function(i,u){var e=document.getElementById(i);if(e.hasAttribute("data-web")&&Android.webGit)Android.webGit(i,u);else e.src=u},resim:function(i,n){document.getElementById(i).src=(UGCO.M&&UGCO.M[n])||("img/m/"+n)}};
+var a, liste1;
+
+
+addEventListener('load',function(){
+  a = 0;
+  liste1 = ["27490.png", "27520.png", "27469.png"];
+});
+
+document.getElementById('btn2').addEventListener('click',function(){
+  a = (typeof a === 'number' ? a : 0) + -1;
+  UGCO.resim('img1',String(liste1[(a)-1]));
+  if (1 > a) {
+    a = 1;
+  }
+});
+
+document.getElementById('btn1').addEventListener('click',function(){
+  a = (typeof a === 'number' ? a : 0) + 1;
+  UGCO.resim('img1',String(liste1[(a)-1]));
+  if (a > 3) {
+    a = 3;
+  }
+});
+
+
+</script></body></html>
