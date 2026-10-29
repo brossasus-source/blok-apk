@@ -35,6 +35,17 @@ jobs:
         with:
           gradle-version: '8.7'
 
+      - name: Kalıcı imza anahtarı
+        run: |
+          if [ ! -f android/ugco.keystore ]; then
+            keytool -genkeypair -keystore android/ugco.keystore -storepass ugcoapk123 -keypass ugcoapk123 -alias ugco -keyalg RSA -keysize 2048 -validity 36500 -dname "CN=UGCO APK, O=UGCO, C=TR"
+            git config user.name "github-actions"
+            git config user.email "actions@users.noreply.github.com"
+            git add android/ugco.keystore
+            git commit -q -m "imza anahtarı oluşturuldu"
+            for i in 1 2 3; do git pull -q --rebase && git push -q && break || sleep 3; done
+          fi
+
       - name: Uygulamayı hazırla
         run: |
           set -e
@@ -49,6 +60,17 @@ jobs:
           case "$YON" in
             portrait|landscape) sed -i "s|android:name=\".MainActivity\"|android:name=\".MainActivity\" android:screenOrientation=\"$YON\"|" android/app/src/main/AndroidManifest.xml ;;
           esac
+          M() { grep -o "name=\"$1\" content=\"[^\"]*\"" "jobs/$ID/index.html" | head -1 | sed 's/.*content="//;s/"$//'; }
+          PKG=$(M ugco-paket); SURUM=$(M ugco-surum); TAM=$(M ugco-tam)
+          if [ -z "$PKG" ]; then PKG=tr.ugco.blokapp; fi
+          if [ -z "$SURUM" ]; then SURUM=1; fi
+          RE='^(com\.ugco\.[a-z][a-z0-9]{2,29}|tr\.ugco\.blokapp)$'
+          [[ "$PKG" =~ $RE ]] || { echo "Geçersiz paket adı: $PKG"; exit 1; }
+          [[ "$SURUM" =~ ^[0-9]{1,4}$ ]] || { echo "Geçersiz sürüm: $SURUM"; exit 1; }
+          sed -i "s/applicationId '[^']*'/applicationId '$PKG'/; s/versionCode [0-9]*/versionCode $SURUM/; s/versionName '[^']*'/versionName '$SURUM.0'/" android/app/build.gradle
+          if [ "$TAM" = "1" ]; then sed -i 's|Theme.Material.Light.NoActionBar|Theme.Material.Light.NoActionBar.Fullscreen|' android/app/src/main/AndroidManifest.xml; fi
+          echo "PKG=$PKG" >> "$GITHUB_ENV"
+          echo "SURUM=$SURUM" >> "$GITHUB_ENV"
           if [ -d "jobs/$ID/img" ]; then
             mkdir -p android/app/src/main/assets/img
             cp -r jobs/$ID/img/. android/app/src/main/assets/img/
@@ -64,20 +86,44 @@ jobs:
           open('android/app/src/main/res/values/strings.xml', 'w', encoding='utf-8').write(xml)
           PY
 
+      - name: İmza ayarı
+        run: |
+          cat >> android/app/build.gradle <<'GRADLE'
+          android {
+              signingConfigs {
+                  ugco {
+                      storeFile file('../ugco.keystore')
+                      storePassword 'ugcoapk123'
+                      keyAlias 'ugco'
+                      keyPassword 'ugcoapk123'
+                  }
+              }
+              buildTypes {
+                  debug { signingConfig signingConfigs.ugco }
+              }
+          }
+          GRADLE
+
       - name: APK derle
         working-directory: android
         run: gradle assembleDebug --no-daemon
 
       - name: APK'yı yayınla
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk "uygulama-$ID.apk"
-          gh release create "apk-$ID" "uygulama-$ID.apk" --title "apk-$ID" --notes "Otomatik üretildi"
+          cp android/app/build/outputs/apk/debug/app-debug.apk "$PKG-v$SURUM.apk"
+          gh release create "apk-$ID" "$PKG-v$SURUM.apk" --title "apk-$ID" --notes "Otomatik üretildi"
 
       - name: İş dosyasını temizle
         continue-on-error: true
         run: |
           git config user.name "github-actions"
           git config user.email "actions@users.noreply.github.com"
+          git checkout -q -- android
           git rm -r -q "jobs/$ID"
           git commit -q -m "iş $ID temizlendi"
           for i in 1 2 3; do git pull -q --rebase && git push -q && break || sleep 3; done
+
+      - name: Eski APK kayıtlarını temizle (son 20 kalsın)
+        continue-on-error: true
+        run: |
+          gh release list --limit 100 --json tagName --jq '.[20:][].tagName' | while read t; do gh release delete "$t" --cleanup-tag -y || true; done
