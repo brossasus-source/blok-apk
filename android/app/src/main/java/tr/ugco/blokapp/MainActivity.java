@@ -6,6 +6,10 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.speech.tts.TextToSpeech;
@@ -20,13 +24,17 @@ import android.widget.Toast;
 import java.util.HashMap;
 import java.util.Locale;
 
-public class MainActivity extends Activity implements TextToSpeech.OnInitListener {
+public class MainActivity extends Activity implements TextToSpeech.OnInitListener, SensorEventListener {
 
     private FrameLayout root;
     private WebView web;
     private TextToSpeech tts;
     private boolean ttsHazir = false;
     private boolean geriKilitli = false;
+    private SensorManager sm;
+    private boolean sensorIstek = false;
+    private volatile float ax = 0, ay = 0, az = 0;
+    private long sonSalla = 0;
     // Tasarımdaki "Web görüntüleyici" bileşenleri: bileşen adı -> gerçek WebView
     private final HashMap<String, WebView> webler = new HashMap<String, WebView>();
 
@@ -51,6 +59,47 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         web.addJavascriptInterface(new Kopru(), "Android");
         web.setWebViewClient(new WebViewClient());
         web.loadUrl("file:///android_asset/index.html");
+    }
+
+    private void sensorAc() {
+        if (sm == null) sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        if (sm == null) return;
+        Sensor s = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        if (s != null) sm.registerListener(this, s, SensorManager.SENSOR_DELAY_GAME);
+    }
+
+    private void sensorKapat() {
+        if (sm != null) sm.unregisterListener(this);
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent e) {
+        ax = e.values[0];
+        ay = e.values[1];
+        az = e.values[2];
+        double g = Math.sqrt(ax * ax + ay * ay + az * az);
+        long simdi = System.currentTimeMillis();
+        if (g > 16.0 && simdi - sonSalla > 800) {   // sallama eşiği (yaklaşık 1.6 G)
+            sonSalla = simdi;
+            runOnUiThread(new Runnable() { public void run() {
+                web.evaluateJavascript("window.ugcoSalla && window.ugcoSalla()", null);
+            } });
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor s, int hassasiyet) { }
+
+    @Override
+    protected void onPause() {
+        sensorKapat();
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (sensorIstek) sensorAc();
     }
 
     @Override
@@ -115,6 +164,18 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         @JavascriptInterface
         public void ekranAcik(final boolean acik) {
             runOnUiThread(new Runnable() { public void run() { web.setKeepScreenOn(acik); } });
+        }
+
+        @JavascriptInterface
+        public void sensorBaslat() {
+            runOnUiThread(new Runnable() { public void run() {
+                if (!sensorIstek) { sensorIstek = true; sensorAc(); }
+            } });
+        }
+
+        @JavascriptInterface
+        public double egim(String eksen) {
+            return "x".equals(eksen) ? ax : ("y".equals(eksen) ? ay : az);
         }
 
         @JavascriptInterface
