@@ -1,0 +1,65 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><meta name="ugco-yon" content="portrait"><meta name="ugco-paket" content="com.ugco.uygulamam"><meta name="ugco-surum" content="2"><title>Uygulamam</title><style>html,body{margin:0;height:100%;overflow:hidden}#e{position:fixed;inset:0;background:#eef6ff}.b{position:absolute;box-sizing:border-box;margin:0;font-family:sans-serif}.l{display:flex;align-items:center;padding:0 2%}.t{border:1px solid #9aa8b5;border-radius:6px;padding:0 2%}.k{border:0;border-radius:10px;font-weight:700}.w{border:0;background:#fff}.f{display:flex;align-items:center;overflow:hidden}.c{position:relative;box-sizing:border-box;margin:0;font-family:sans-serif}#__t{position:fixed;left:50%;bottom:4%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 16px;border-radius:20px;display:none;font:15px sans-serif}</style></head><body><div id="e"><button id="btn1" class="b k" style="left:27.77777777777778%;top:9.375%;width:44.44444444444444%;height:7.8125%;font-size:5.555555555555555vw;color:#ffffff;background:#27ae60">Buton</button></div><div id="__t"></div><script>
+window.Android=window.Android||{toast:function(m){var t=document.getElementById("__t");t.textContent=m;t.style.display="block";clearTimeout(t.z);t.z=setTimeout(function(){t.style.display="none"},2000)},vibrate:function(m){if(navigator.vibrate)navigator.vibrate(m)},speak:function(s){try{var u=new SpeechSynthesisUtterance(s);u.lang="tr-TR";speechSynthesis.speak(u)}catch(e){}}};var UGCO={yaz:function(i,s){var e=document.getElementById(i);if(e.tagName=="INPUT")e.value=s;else e.textContent=s},oku:function(i){var e=document.getElementById(i);return e.tagName=="INPUT"?e.value:e.textContent},gor:function(i,b){var e=document.getElementById(i);e.style.display=b?"":"none";if(e.hasAttribute("data-web")&&Android.webGor)Android.webGor(i,b)},bg:function(i,c){document.getElementById(i).style.background=c},Z:[],zaman:function(s,f){UGCO.Z.push(setInterval(f,Math.max(0.05,s)*1000))},sonra:function(s,f){UGCO.Z.push(setTimeout(f,Math.max(0,s)*1000))},durdur:function(){UGCO.Z.forEach(function(t){clearInterval(t);clearTimeout(t)});UGCO.Z=[]},ekranBg:function(c){document.getElementById("e").style.background=c},karistir:function(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}},git:function(i,u){var e=document.getElementById(i);if(e.hasAttribute("data-web")&&Android.webGit)Android.webGit(i,u);else e.src=u},resim:function(i,n){document.getElementById(i).src=(UGCO.M&&UGCO.M[n])||("img/m/"+n)}};
+UGCO.SW=360;UGCO.SH=640;(function __rt(){
+  var U=window.UGCO, A=window.Android;
+  function el(i){ return document.getElementById(i); }
+  function pad(n){ return (n<10?'0':'')+n; }
+  U.D={}; U.cevap=''; U.ZA={};
+  U.zamanAd=function(ad,s,f){ if(U.ZA[ad]) clearInterval(U.ZA[ad]); U.ZA[ad]=setInterval(f,Math.max(0.05,s)*1000); };
+  U.durdurAd=function(ad){ if(U.ZA[ad]){ clearInterval(U.ZA[ad]); delete U.ZA[ad]; } };
+  var d0=U.durdur; U.durdur=function(){ d0(); for(var k in U.ZA) clearInterval(U.ZA[k]); U.ZA={}; };
+  U.liste=function(w,a){ a=a||[]; if(!a.length) return 0; var s=0,mn=Infinity,mx=-Infinity; a.forEach(function(x){ x=parseFloat(x)||0; s+=x; if(x<mn) mn=x; if(x>mx) mx=x; }); return w=='sum'?s:w=='avg'?s/a.length:w=='min'?mn:mx; };
+  U.depoYaz=function(k,v){ try{ localStorage.setItem('u_'+k,JSON.stringify(v)); }catch(e){ U.D[k]=v; } };
+  U.depoOku=function(k,d){ try{ var s=localStorage.getItem('u_'+k); if(s!==null) return JSON.parse(s); }catch(e){ if(U.D.hasOwnProperty(k)) return U.D[k]; } return d; };
+  U.depoSil=function(k){ try{ localStorage.removeItem('u_'+k); }catch(e){} delete U.D[k]; };
+  U.saat=function(w){ var d=new Date(), g=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'], a=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+    return {saat:d.getHours(),dakika:d.getMinutes(),saniye:d.getSeconds(),gun:d.getDate(),ay:d.getMonth()+1,yil:d.getFullYear(),haftagun:g[d.getDay()],ayad:a[d.getMonth()],saatm:pad(d.getHours())+':'+pad(d.getMinutes()),tarih:pad(d.getDate())+'.'+pad(d.getMonth()+1)+'.'+d.getFullYear(),ms:Date.now()}[w]; };
+  U.ozellik=function(i,p,v){ var e=el(i);
+    if(p=='renk') e.style.color=v; else if(p=='boyut') e.style.fontSize=(v/U.SW*100)+'vw'; else if(p=='etkin') e.disabled=!v;
+    else if(p=='seffaf') e.style.opacity=(100-v)/100; else if(p=='kose') e.style.borderRadius=v+'px'; };
+  U.konum=function(i,x,y){ var e=el(i); e.style.left=(x/U.SW*100)+'%'; e.style.top=(y/U.SH*100)+'%'; };
+  U.boyut=function(i,w,h){ var e=el(i); e.style.width=(w/U.SW*100)+'%'; e.style.height=(h/U.SH*100)+'%'; };
+  U.kay=function(i,x,y,s){ var e=el(i); e.style.transition='left '+s+'s,top '+s+'s'; U.konum(i,x,y); };
+  U.don=function(i,d){ el(i).style.transform='rotate('+d+'deg)'; };
+  U.olc=function(i,w){ var r=el(i).getBoundingClientRect(), kx=U.SW/innerWidth, ky=U.SH/innerHeight;
+    return Math.round(w=='x'?r.left*kx:w=='y'?r.top*ky:w=='w'?r.width*kx:r.height*ky); };
+  U.carpis=function(a,b){ var p=el(a).getBoundingClientRect(), q=el(b).getBoundingClientRect(); return !(p.right<q.left||p.left>q.right||p.bottom<q.top||p.top>q.bottom); };
+  U.degisince=function(i,f){ el(i).addEventListener('input',f); };
+  U.uzun=function(i,f){ var t, e=el(i); function b(){ t=setTimeout(f,600); } function k(){ clearTimeout(t); }
+    e.addEventListener('touchstart',b); e.addEventListener('mousedown',b); ['touchend','touchmove','mouseup','mouseleave'].forEach(function(n){ e.addEventListener(n,k); }); };
+  function kutu(m){ var d=document.createElement('div'); d.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:99999;font-family:sans-serif';
+    var c=document.createElement('div'); c.style.cssText='background:#fff;border-radius:16px;padding:20px;width:80%;max-width:360px;text-align:center;color:#222';
+    var t=document.createElement('div'); t.style.cssText='font-size:18px;margin-bottom:14px'; t.textContent=m; c.appendChild(t); d.appendChild(c); document.body.appendChild(d); return {d:d,c:c}; }
+  function dugme(c,y,r,f){ var b=document.createElement('button'); b.textContent=y; b.style.cssText='font-size:16px;padding:10px 22px;margin:4px;border:0;border-radius:10px;color:#fff;background:'+r; b.onclick=f; c.appendChild(b); }
+  U.uyari=function(m){ var k=kutu(m); dugme(k.c,'Tamam','#27ae60',function(){ k.d.remove(); }); };
+  U.sor=function(m,f){ var k=kutu(m), i=document.createElement('input'); i.style.cssText='width:100%;box-sizing:border-box;font-size:18px;padding:8px;margin-bottom:10px'; k.c.appendChild(i);
+    dugme(k.c,'Tamam','#27ae60',function(){ U.cevap=i.value; k.d.remove(); f(); }); };
+  U.onay=function(m,e,h){ var k=kutu(m); dugme(k.c,'Evet','#27ae60',function(){ k.d.remove(); e(); }); dugme(k.c,'Hayır','#e74c3c',function(){ k.d.remove(); h(); }); };
+  U.bip=function(f,ms){ try{ var c=U.ac||(U.ac=new (window.AudioContext||window.webkitAudioContext)()); if(c.resume) c.resume();
+    var o=c.createOscillator(), g=c.createGain(); o.frequency.value=f; g.gain.value=0.2; o.connect(g); g.connect(c.destination); o.start(); setTimeout(function(){ o.stop(); },ms); }catch(e){} };
+  var eg={x:0,y:0,z:0}, son=0, sf=[];
+  addEventListener('devicemotion',function(e){ var a=e.accelerationIncludingGravity; if(!a) return; eg={x:a.x||0,y:a.y||0,z:a.z||0};
+    var m=Math.sqrt(eg.x*eg.x+eg.y*eg.y+eg.z*eg.z); if(Math.abs(m-9.81)>12&&Date.now()-son>900){ son=Date.now(); sf.forEach(function(f){ f(); }); } });
+  U.salla=function(f){ sf.push(f); }; U.egim=function(w){ return Math.round(eg[w]*10)/10; };
+  U.kapat=function(){ if(A&&A.kapat) A.kapat(); };
+  U.link=function(u){ if(A&&A.linkAc) A.linkAc(u); else window.open(u); };
+  U.paylas=function(t){ if(A&&A.paylas) A.paylas(t); else if(navigator.share) navigator.share({text:t}); };
+  U.pano=function(t){ if(A&&A.panoya) A.panoya(t); else if(navigator.clipboard) navigator.clipboard.writeText(t); };
+  U.acik=function(b){ if(A&&A.ekranAcik) A.ekranAcik(b); };
+  U.geri=function(f){ window.ugcoGeri=f; if(A&&A.geriKilit) A.geriKilit(true); };
+})();
+function colourRandom() {
+  var num = Math.floor(Math.random() * Math.pow(2, 24));
+  return '#' + ('00000' + num.toString(16)).substr(-6);
+}
+
+
+document.getElementById('btn1').addEventListener('click',function(){
+  UGCO.ekranBg(colourRandom());
+});
+
+UGCO.salla(function(){
+});
+
+
+</script></body></html>
