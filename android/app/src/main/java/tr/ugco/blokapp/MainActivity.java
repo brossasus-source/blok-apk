@@ -1,7 +1,11 @@
 package tr.ugco.blokapp;
 
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.speech.tts.TextToSpeech;
@@ -22,6 +26,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     private WebView web;
     private TextToSpeech tts;
     private boolean ttsHazir = false;
+    private boolean geriKilitli = false;
     // Tasarımdaki "Web görüntüleyici" bileşenleri: bileşen adı -> gerçek WebView
     private final HashMap<String, WebView> webler = new HashMap<String, WebView>();
 
@@ -75,6 +80,46 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         @JavascriptInterface
         public void speak(String metin) {
             if (ttsHazir) tts.speak(metin, TextToSpeech.QUEUE_FLUSH, null, "ugco");
+        }
+
+        @JavascriptInterface
+        public void kapat() {
+            runOnUiThread(new Runnable() { public void run() { finish(); } });
+        }
+
+        @JavascriptInterface
+        public void linkAc(final String url) {
+            runOnUiThread(new Runnable() { public void run() {
+                try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception e) { }
+            } });
+        }
+
+        @JavascriptInterface
+        public void paylas(final String metin) {
+            runOnUiThread(new Runnable() { public void run() {
+                Intent i = new Intent(Intent.ACTION_SEND);
+                i.setType("text/plain");
+                i.putExtra(Intent.EXTRA_TEXT, metin);
+                startActivity(Intent.createChooser(i, "Paylaş"));
+            } });
+        }
+
+        @JavascriptInterface
+        public void panoya(final String metin) {
+            runOnUiThread(new Runnable() { public void run() {
+                ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                if (cm != null) cm.setPrimaryClip(ClipData.newPlainText("ugco", metin));
+            } });
+        }
+
+        @JavascriptInterface
+        public void ekranAcik(final boolean acik) {
+            runOnUiThread(new Runnable() { public void run() { web.setKeepScreenOn(acik); } });
+        }
+
+        @JavascriptInterface
+        public void geriKilit(boolean kilit) {
+            geriKilitli = kilit;
         }
 
         // Web görüntüleyiciyi ekrandaki yerine koyar (konum ve boyut, ekranın oranı olarak gelir: 0..1)
@@ -131,6 +176,10 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                 v.goBack();
                 return;
             }
+        }
+        if (geriKilitli) {
+            web.evaluateJavascript("window.ugcoGeri && window.ugcoGeri()", null);
+            return;
         }
         if (web.canGoBack()) web.goBack(); else super.onBackPressed();
     }
