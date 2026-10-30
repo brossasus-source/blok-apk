@@ -114,6 +114,7 @@ jobs:
           gh release create "apk-$ID" "$PKG-v$SURUM.apk" --title "apk-$ID" --notes "Otomatik üretildi"
 
       - name: İş dosyasını temizle
+        if: always()
         continue-on-error: true
         run: |
           git config user.name "github-actions"
