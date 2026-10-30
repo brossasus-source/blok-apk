@@ -71,6 +71,9 @@ jobs:
           if [ "$TAM" = "1" ]; then sed -i 's|Theme.Material.Light.NoActionBar|Theme.Material.Light.NoActionBar.Fullscreen|' android/app/src/main/AndroidManifest.xml; fi
           echo "PKG=$PKG" >> "$GITHUB_ENV"
           echo "SURUM=$SURUM" >> "$GITHUB_ENV"
+          if grep -q 'name="ugco-kamera"' "jobs/$ID/index.html"; then
+            sed -i 's|<uses-permission android:name="android.permission.VIBRATE" />|&\n    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-feature android:name="android.hardware.camera" android:required="false" />|' android/app/src/main/AndroidManifest.xml
+          fi
           if [ -d "jobs/$ID/img" ]; then
             mkdir -p android/app/src/main/assets/img
             cp -r jobs/$ID/img/. android/app/src/main/assets/img/
