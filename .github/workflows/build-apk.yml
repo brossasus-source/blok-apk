@@ -74,6 +74,13 @@ jobs:
           if grep -q 'name="ugco-kamera"' "jobs/$ID/index.html"; then
             sed -i 's|<uses-permission android:name="android.permission.VIBRATE" />|&\n    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-feature android:name="android.hardware.camera" android:required="false" />|' android/app/src/main/AndroidManifest.xml
           fi
+          if grep -q 'name="ugco-mikrofon"' "jobs/$ID/index.html"; then
+            sed -i 's|<uses-permission android:name="android.permission.VIBRATE" />|&\n    <uses-permission android:name="android.permission.RECORD_AUDIO" />|' android/app/src/main/AndroidManifest.xml
+            sed -i 's|<application|<queries><intent><action android:name="android.speech.RecognitionService" /></intent><intent><action android:name="android.speech.action.RECOGNIZE_SPEECH" /></intent></queries>\n    <application|' android/app/src/main/AndroidManifest.xml
+          fi
+          if grep -q 'name="ugco-konum"' "jobs/$ID/index.html"; then
+            sed -i 's|<uses-permission android:name="android.permission.VIBRATE" />|&\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <uses-feature android:name="android.hardware.location.gps" android:required="false" />|' android/app/src/main/AndroidManifest.xml
+          fi
           if [ -d "jobs/$ID/img" ]; then
             mkdir -p android/app/src/main/assets/img
             cp -r jobs/$ID/img/. android/app/src/main/assets/img/
@@ -109,7 +116,19 @@ jobs:
 
       - name: APK derle
         working-directory: android
-        run: gradle assembleDebug --no-daemon
+        run: |
+          set +e
+          gradle assembleDebug --no-daemon --console=plain > ../gradle.log 2>&1
+          KOD=$?
+          if [ $KOD -ne 0 ]; then
+            echo "---- Gradle çıktısının son satırları ----"
+            tail -n 60 ../gradle.log
+            OZET=$(grep -E "error:|What went wrong|Execution failed|AAPT|FAILED|Manifest merger|^> " ../gradle.log | head -n 12 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            echo "::error title=Gradle hatası::${OZET}"
+          else
+            tail -n 3 ../gradle.log
+          fi
+          exit $KOD
 
       - name: APK'yı yayınla
         run: |
