@@ -2,6 +2,8 @@ package tr.ugco.blokapp;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.ContentValues;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -336,8 +338,8 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             konumBekliyor = false;
             boolean verildi = false;
             for (int s : sonuclar) if (s == PackageManager.PERMISSION_GRANTED) verildi = true;
-            if (verildi) konumBaslatIc();
-            else jsCagir("window.ugcoKonumHata && window.ugcoKonumHata('izin')");
+            if (verildi) konumBaslatIc(true);
+            else konumIzinDialog();
         }
     }
 
@@ -445,14 +447,45 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                 + ",yuk:" + (l.hasAltitude() ? l.getAltitude() : 0) + ",dog:" + (l.hasAccuracy() ? l.getAccuracy() : 0) + "})");
     }
 
-    private void konumBaslatIc() {
+    private void konumDialog() {
+        new AlertDialog.Builder(this)
+            .setTitle("Konum kapalı")
+            .setMessage("Konumunuzu bulabilmemiz için telefonun konum (GPS) servisini açmanız gerekiyor.")
+            .setPositiveButton("Ayarları aç", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface d, int i) {
+                    try { startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)); } catch (Exception e) { }
+                }
+            })
+            .setNegativeButton("Vazgeç", null)
+            .show();
+    }
+
+    private void konumIzinDialog() {
+        new AlertDialog.Builder(this)
+            .setTitle("Konum izni gerekli")
+            .setMessage("Konumunuzu görebilmek için uygulamaya konum izni vermeniz gerekiyor. Uygulama ayarlarından izin verebilirsiniz.")
+            .setPositiveButton("Ayarları aç", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface d, int i) {
+                    try {
+                        Intent it = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                        it.setData(Uri.parse("package:" + getPackageName()));
+                        startActivity(it);
+                    } catch (Exception e) { }
+                }
+            })
+            .setNegativeButton("Vazgeç", null)
+            .show();
+    }
+
+    private void konumBaslatIc(boolean sor) {
         try {
             if (lm == null) lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             if (lm == null) return;
             boolean gps = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
             boolean ag = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
             if (!gps && !ag) {
-                jsCagir("window.ugcoKonumHata && window.ugcoKonumHata('kapali')");
+                konumIstek = true;          // ayardan dönünce yeniden denensin
+                if (sor) konumDialog();
                 return;
             }
             konumIstek = true;
@@ -578,7 +611,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     protected void onResume() {
         super.onResume();
         if (sensorIstek) sensorAc();
-        if (konumIstek) konumBaslatIc();
+        if (konumIstek) konumBaslatIc(false);
         if (kameraView != null && kameraView.isAvailable()) {
             kameraKur(kameraView.getSurfaceTexture(), kameraView.getWidth(), kameraView.getHeight());
         }
@@ -911,7 +944,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                         requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, IZIN_KONUM);
                         return;
                     }
-                    konumBaslatIc();
+                    konumBaslatIc(true);
                 }
             });
         }
