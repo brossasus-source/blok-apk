@@ -83,6 +83,8 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     private String konusDil = "tr-TR";
     private boolean konusBekliyor = false;
     private static final int IZIN_MIKROFON = 102;
+    // Uyarı kutusu açıkken geçici gizlenen yerel katmanlar
+    private final ArrayList<View> gizlenen = new ArrayList<View>();
     // Müzik çalar
     private MediaPlayer muz;
     private boolean muzHazir = false;
@@ -974,6 +976,28 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             runOnUiThread(new Runnable() {
                 public void run() {
                     try { startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)); } catch (Exception e) { }
+                }
+            });
+        }
+
+        // Sayfadaki uyarı/popup kutuları yerel katmanların (kamera, web) arkasında kalmasın diye
+        @JavascriptInterface
+        public void katmanGizle(final boolean gizle) {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    if (gizle) {
+                        ArrayList<View> adaylar = new ArrayList<View>(webler.values());
+                        if (kameraView != null) adaylar.add(kameraView);
+                        for (View v : adaylar) {
+                            if (v.getVisibility() == View.VISIBLE) {
+                                v.setVisibility(View.INVISIBLE);
+                                gizlenen.add(v);
+                            }
+                        }
+                    } else {
+                        for (View v : gizlenen) v.setVisibility(View.VISIBLE);
+                        gizlenen.clear();
+                    }
                 }
             });
         }
