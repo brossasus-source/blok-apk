@@ -55,6 +55,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.util.HashMap;
@@ -102,6 +103,8 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     private static final int ISTEK_GALERI = 77;
     // Tasarımdaki "Web görüntüleyici" bileşenleri: bileşen adı -> gerçek WebView
     private final HashMap<String, WebView> webler = new HashMap<String, WebView>();
+    // Resim öğeleri Web/Kamera üstünde göstermek için native ImageView katmanları
+    private final HashMap<String, ImageView> ustler = new HashMap<String, ImageView>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -987,6 +990,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                 public void run() {
                     if (gizle) {
                         ArrayList<View> adaylar = new ArrayList<View>(webler.values());
+                        adaylar.addAll(ustler.values());
                         if (kameraView != null) adaylar.add(kameraView);
                         for (View v : adaylar) {
                             if (v.getVisibility() == View.VISIBLE) {
@@ -1017,6 +1021,76 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         @JavascriptInterface
         public void geriKilit(boolean kilit) {
             geriKilitli = kilit;
+        }
+
+        // Resim öğesini Web/Kamera katmanının üstünde native ImageView olarak gösterir
+        @JavascriptInterface
+        public void ustResimEkle(final String id, final double x, final double y, final double w, final double h, final String src, final String fit) {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    ImageView iv = ustler.get(id);
+                    if (iv == null) {
+                        iv = new ImageView(MainActivity.this);
+                        iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                        ustler.put(id, iv);
+                        root.addView(iv);
+                    }
+                    int rw = root.getWidth();
+                    int rh = root.getHeight();
+                    FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams((int) (w * rw), (int) (h * rh));
+                    lp.leftMargin = (int) (x * rw);
+                    lp.topMargin  = (int) (y * rh);
+                    iv.setLayoutParams(lp);
+                    if ("cover".equals(fit))       iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                    else if ("fill".equals(fit))   iv.setScaleType(ImageView.ScaleType.FIT_XY);
+                    else                           iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                    if (src != null && src.startsWith("data:image")) {
+                        try {
+                            String b64 = src.contains(",") ? src.split(",", 2)[1] : src;
+                            byte[] bytes = android.util.Base64.decode(b64, android.util.Base64.DEFAULT);
+                            iv.setImageBitmap(android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
+                        } catch (Exception ignored) {}
+                    } else if (src != null && src.length() > 0) {
+                        iv.setImageURI(android.net.Uri.parse(src));
+                    }
+                    // Tıklamayı WebView'e ilet (dokunma saydam geçsin)
+                    iv.setOnTouchListener(new android.view.View.OnTouchListener() {
+                        public boolean onTouch(android.view.View v2, android.view.MotionEvent ev) {
+                            web.dispatchTouchEvent(ev);
+                            return false;
+                        }
+                    });
+                }
+            });
+        }
+
+        // Resim öğesinin kaynağını günceller (resminde göster bloğu kullanıldığında)
+        @JavascriptInterface
+        public void ustResimKaynak(final String id, final String src) {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    ImageView iv = ustler.get(id);
+                    if (iv == null) return;
+                    if (src == null || src.isEmpty()) { iv.setImageDrawable(null); return; }
+                    if (src.startsWith("data:image")) {
+                        try {
+                            String b64 = src.contains(",") ? src.split(",", 2)[1] : src;
+                            byte[] bytes = android.util.Base64.decode(b64, android.util.Base64.DEFAULT);
+                            iv.setImageBitmap(android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
+                        } catch (Exception ignored) {}
+                    } else {
+                        // assets veya dosya yolu
+                        try {
+                            java.io.File f = new java.io.File(getFilesDir(), "foto/" + src);
+                            if (f.exists()) {
+                                iv.setImageBitmap(android.graphics.BitmapFactory.decodeFile(f.getAbsolutePath()));
+                                return;
+                            }
+                        } catch (Exception ignored) {}
+                        iv.setImageURI(android.net.Uri.parse(src));
+                    }
+                }
+            });
         }
 
         // Web görüntüleyiciyi ekrandaki yerine koyar (konum ve boyut, ekranın oranı olarak gelir: 0..1)
