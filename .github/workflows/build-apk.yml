@@ -96,6 +96,43 @@ jobs:
           open('android/app/src/main/res/values/strings.xml', 'w', encoding='utf-8').write(xml)
           PY
 
+      - name: Yazı tiplerini uygulamaya göm
+        continue-on-error: true
+        run: |
+          python3 - <<'PY'
+          import re, base64, html, urllib.request
+          yol = 'android/app/src/main/assets/index.html'
+          s = open(yol, encoding='utf-8').read()
+          UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
+          def al(url):
+              return urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': UA}), timeout=40).read()
+          def degistir(m):
+              etiket = m.group(0)
+              ad = re.search(r'data-ugco-font="([^"]*)"', etiket).group(1)
+              try:
+                  url = html.unescape(re.search(r'href="([^"]+)"', etiket).group(1))
+                  css = al(url).decode('utf-8')
+                  parcalar, altlar = [], []
+                  for alt, blok in re.findall(r'/\*\s*([\w-]+)\s*\*/\s*(@font-face\s*\{[^}]*\})', css):
+                      if alt not in ('latin', 'latin-ext'):
+                          continue   # Türkçe için latin + latin-ext yeterli
+                      altlar.append(alt)
+                      u = re.search(r'url\((https://[^)]+)\)', blok).group(1)
+                      veri = base64.b64encode(al(u)).decode()
+                      parcalar.append(blok.replace(u, 'data:font/woff2;base64,' + veri))
+                  if 'latin-ext' not in altlar:
+                      print('::warning::%s yazı tipinde Türkçe (latin-ext) alt kümesi yok; ğ ş İ harfleri varsayılan yazı tipiyle çıkabilir' % ad)
+                  if not parcalar:
+                      raise Exception('yazı tipi dosyası bulunamadı')
+                  print('Gömüldü:', ad, altlar)
+                  return '<style>' + '\n'.join(parcalar) + '</style>'
+              except Exception as e:
+                  print('::warning::%s gömülemedi (%s); çevrimiçi bağlantı bırakıldı' % (ad, e))
+                  return etiket
+          s = re.sub(r'<link[^>]*data-ugco-font[^>]*>', degistir, s)
+          open(yol, 'w', encoding='utf-8').write(s)
+          PY
+
       - name: İmza ayarı
         run: |
           cat >> android/app/build.gradle <<'GRADLE'
