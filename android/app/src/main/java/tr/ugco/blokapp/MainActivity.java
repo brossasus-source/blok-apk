@@ -794,6 +794,52 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             new File(fotoKlasor(), guvenliAd(ad) + ".jpg").delete();
         }
 
+        // Tuval (boyama) çizimini doğrudan base64 veriden fotoğraf olarak kaydeder (foto/galeri akışını kullanmadan)
+        @JavascriptInterface
+        public String fotoYaz(String ad, String base64) {
+            try {
+                String veri = base64 != null && base64.contains(",") ? base64.split(",", 2)[1] : base64;
+                if (veri == null || veri.length() == 0) return "";
+                byte[] ham = Base64.decode(veri, Base64.DEFAULT);
+                Bitmap bm = BitmapFactory.decodeByteArray(ham, 0, ham.length);
+                if (bm == null) return "";
+                int enb = Math.max(bm.getWidth(), bm.getHeight());
+                if (enb > 1600) {
+                    float k = 1600f / enb;
+                    bm = Bitmap.createScaledBitmap(bm, Math.round(bm.getWidth() * k), Math.round(bm.getHeight() * k), true);
+                }
+                String guvenli = guvenliAd(ad);
+                if (guvenli.length() == 0) return "";
+                FileOutputStream cikis = new FileOutputStream(new File(fotoKlasor(), guvenli + ".jpg"));
+                bm.compress(Bitmap.CompressFormat.JPEG, 90, cikis);
+                cikis.close();
+                return guvenli;
+            } catch (Exception e) {
+                return "";
+            }
+        }
+
+        // Uygulamaya paketlenmiş bir varlık (assets) dosyasını base64 veri adresi olarak okur.
+        // <canvas>'a çizerken (Tuval) ya da yerel resim katmanına (ustResimEkle) verirken
+        // "img/..." gibi göreli yollar yerine bunu kullanmak, tuvalin kirlenmesini (taint) önler.
+        @JavascriptInterface
+        public String assetOku(String yol) {
+            try {
+                if (yol == null || yol.length() == 0) return "";
+                InputStream giris = getAssets().open(yol);
+                ByteArrayOutputStream tampon = new ByteArrayOutputStream();
+                byte[] t = new byte[8192];
+                int n;
+                while ((n = giris.read(t)) > 0) tampon.write(t, 0, n);
+                giris.close();
+                String uzanti = yol.toLowerCase(Locale.US);
+                String mime = uzanti.endsWith(".png") ? "image/png" : (uzanti.endsWith(".webp") ? "image/webp" : "image/jpeg");
+                return "data:" + mime + ";base64," + Base64.encodeToString(tampon.toByteArray(), Base64.NO_WRAP);
+            } catch (Exception e) {
+                return "";
+            }
+        }
+
         @JavascriptInterface
         public void galeriyeKaydet(final String ad) {
             new Thread(new Runnable() {
@@ -1089,6 +1135,17 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                         } catch (Exception ignored) {}
                         iv.setImageURI(android.net.Uri.parse(src));
                     }
+                }
+            });
+        }
+
+        // Resim öğesi yerel katmanının görünürlüğünü değiştirir (görünür/gizli yap bloğu)
+        @JavascriptInterface
+        public void ustResimGor(final String id, final boolean goster) {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    ImageView iv = ustler.get(id);
+                    if (iv != null) iv.setVisibility(goster ? View.VISIBLE : View.GONE);
                 }
             });
         }
