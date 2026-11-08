@@ -170,6 +170,25 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         return ad == null ? "" : ad.replaceAll("[^A-Za-z0-9_-]", "");
     }
 
+    // "Sesli söyle" bloğundaki dil kısa kodunu TextToSpeech için bir Locale'e çevirir
+    private Locale ttsDilEslestir(String kod) {
+        if (kod == null) return new Locale("tr", "TR");
+        switch (kod) {
+            case "tr": return new Locale("tr", "TR");
+            case "en": return Locale.US;
+            case "de": return new Locale("de", "DE");
+            case "fr": return new Locale("fr", "FR");
+            case "es": return new Locale("es", "ES");
+            case "it": return new Locale("it", "IT");
+            case "pt": return new Locale("pt", "BR");
+            case "ru": return new Locale("ru", "RU");
+            case "ar": return new Locale("ar", "SA");
+            case "ja": return Locale.JAPAN;
+            case "zh-CN": return Locale.SIMPLIFIED_CHINESE;
+            default: return new Locale("tr", "TR");
+        }
+    }
+
     private void jsCagir(String js) {
         web.evaluateJavascript(js, null);
     }
@@ -648,7 +667,25 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
 
         @JavascriptInterface
         public void speak(String metin) {
-            if (ttsHazir) tts.speak(metin, TextToSpeech.QUEUE_FLUSH, null, "ugco");
+            speak(metin, "tr");
+        }
+
+        // Bloktan seçilen dile göre sesli okur (dil kısa kodu: tr, en, de, fr, es, it, pt, ru, ar, ja, zh-CN)
+        @JavascriptInterface
+        public void speak(String metin, String dil) {
+            if (!ttsHazir) return;
+            Locale loc = ttsDilEslestir(dil);
+            if (loc != null) {
+                try {
+                    int sonuc = tts.setLanguage(loc);
+                    if (sonuc == TextToSpeech.LANG_MISSING_DATA || sonuc == TextToSpeech.LANG_NOT_SUPPORTED) {
+                        tts.setLanguage(new Locale("tr", "TR"));
+                    }
+                } catch (Exception e) {
+                    tts.setLanguage(new Locale("tr", "TR"));
+                }
+            }
+            tts.speak(metin, TextToSpeech.QUEUE_FLUSH, null, "ugco");
         }
 
         @JavascriptInterface
