@@ -1198,7 +1198,12 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                         WebSettings ws = v.getSettings();
                         ws.setJavaScriptEnabled(true);
                         ws.setDomStorageEnabled(true);
-                        v.setWebViewClient(new WebViewClient());
+                        v.setWebViewClient(new WebViewClient() {
+                            @Override
+                            public void onPageFinished(WebView view, String finishedUrl) {
+                                jsCagir("window.ugcoWebYuklendi&&window.ugcoWebYuklendi(" + JSONObject.quote(id) + "," + JSONObject.quote(finishedUrl == null ? "" : finishedUrl) + ")");
+                            }
+                        });
                         webler.put(id, v);
                         root.addView(v);
                     }
@@ -1229,6 +1234,51 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                 public void run() {
                     WebView v = webler.get(id);
                     if (v != null) v.setVisibility(goster ? View.VISIBLE : View.GONE);
+                }
+            });
+        }
+
+        // Web görüntüleyicide açık sayfayı yeniden yükler (tarayıcıdaki yenile düğmesi gibi)
+        @JavascriptInterface
+        public void webYenile(final String id) {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    WebView v = webler.get(id);
+                    if (v != null) v.reload();
+                }
+            });
+        }
+
+        // Web görüntüleyicide açık sayfanın HTML kodunu/yazısını/adresini/başlığını okuyup
+        // window.ugcoWebKod(id, durum, değer) ile JS tarafına bildirir (durum: 0=henüz yok,1=tamam,2=hata)
+        @JavascriptInterface
+        public void webOku(final String id, final String tip) {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    final WebView v = webler.get(id);
+                    if (v == null) {
+                        jsCagir("window.ugcoWebKod&&window.ugcoWebKod(" + JSONObject.quote(id) + ",2,'')");
+                        return;
+                    }
+                    if ("adres".equals(tip)) {
+                        String u = v.getUrl();
+                        jsCagir("window.ugcoWebKod&&window.ugcoWebKod(" + JSONObject.quote(id) + ",1," + JSONObject.quote(u == null ? "" : u) + ")");
+                        return;
+                    }
+                    if ("baslik".equals(tip)) {
+                        String t = v.getTitle();
+                        jsCagir("window.ugcoWebKod&&window.ugcoWebKod(" + JSONObject.quote(id) + ",1," + JSONObject.quote(t == null ? "" : t) + ")");
+                        return;
+                    }
+                    String js = "yazi".equals(tip) ? "document.body.innerText" : "document.documentElement.outerHTML";
+                    v.evaluateJavascript(js, new android.webkit.ValueCallback<String>() {
+                        @Override
+                        public void onReceiveValue(String deger) {
+                            // evaluateJavascript sonucu JSON dizge olarak (tırnaklı) gelir; JS tarafı zaten JSON.parse ile çözecek
+                            String d = deger == null ? "null" : deger;
+                            jsCagir("window.ugcoWebKod&&window.ugcoWebKod(" + JSONObject.quote(id) + ",1,JSON.parse(" + JSONObject.quote(d) + "))");
+                        }
+                    });
                 }
             });
         }
